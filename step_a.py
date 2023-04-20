@@ -1,15 +1,18 @@
+from sklearn.utils import shuffle
 import xgboost as xgb
 from google.colab import drive
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score, recall_score, precision_score, multilabel_confusion_matrix
+from copy import deepcopy
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, multilabel_confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 drive.mount('/content/gdrive', force_remount=True)
 
 
-#Function that takes 2d array and returns an ndarray with 7 columns (the features extracted from the data)
+
 def add_features(X):
 
   h, w = X.shape
@@ -51,40 +54,36 @@ def add_features(X):
   
   return new_array
 
-#Read CSVs
+
 test_data = pd.read_csv('/content/gdrive/MyDrive/InputTest.csv')
 train_data = pd.read_csv('/content/gdrive/MyDrive/InputTrain.csv')
 train_labels = pd.read_csv('/content/gdrive/MyDrive/StepOne_LabelTrain.csv')
 
-#Remove House_id and Index columns
 test_data = test_data.drop('House_id', axis=1).drop('Index', axis=1).astype(float)
 train_data = train_data.drop('House_id', axis=1).drop('Index', axis=1).astype(float)
 train_labels = train_labels.drop('House_id', axis=1).drop('Index', axis=1)
 
-#Convert CSVs to numpy
 X_train = train_data.to_numpy()
 X_test = test_data.to_numpy()
 y_train = train_labels.to_numpy()
 
-#Feature extraction
-X_train = add_features(X_train)
-X_test = add_features(X_test)
 
-#Split into train and test
+X_train = add_features(X_train)
+X_test_f = add_features(X_test)
+
+
 X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, shuffle=False)
 
-#function to train and save results plots
-def training(X_train, X_test, y_train, y_test):
+
+def training(X_train, X_test, y_train, y_test, X_test_f):
     model = xgb.XGBClassifier(tree_method='gpu_hist', gpu_id=0)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    
-    #Metrics for each appliances
+    y_pred_f = model.predict(X_test_f)
     f1_scores = f1_score(y_test, y_pred, average=None)
     recalls = recall_score(y_test, y_pred, average=None)
     precisions = precision_score(y_test, y_pred, average=None)
 
-    #Average metrics
     print(f1_score(y_test, y_pred, average='macro'))
     print(recall_score(y_test, y_pred, average='macro'))
     print(precision_score(y_test, y_pred, average='macro'))
@@ -93,9 +92,10 @@ def training(X_train, X_test, y_train, y_test):
     print(recalls)
     print(precisions)
 
-    #Saving plots
     classes = ['Dishwasher', 'Kettle', 'Microwave', 'Tumble Dry.', 'Washing mach.']
 
+    # Plot and save F1-scores
+    indices = np.arange(len(f1_scores))
     plt.bar(classes, f1_scores)
     plt.xlabel('Class')
     plt.ylabel('F1-score')
@@ -103,6 +103,8 @@ def training(X_train, X_test, y_train, y_test):
     plt.savefig('f1_scores.png')
     plt.close()
 
+    # Plot and save recalls
+    indices = np.arange(len(recalls))
     plt.bar(classes, recalls)
     plt.xlabel('Class')
     plt.ylabel('Recall')
@@ -110,6 +112,8 @@ def training(X_train, X_test, y_train, y_test):
     plt.savefig('recalls.png')
     plt.close()
 
+    # Plot and save precisions
+    indices = np.arange(len(precisions))
     plt.bar(classes, precisions)
     plt.xlabel('Class')
     plt.ylabel('Precision')
@@ -117,8 +121,11 @@ def training(X_train, X_test, y_train, y_test):
     plt.savefig('precisions.png')
     plt.close()
 
-    #Confusion matrix
     ml_cm = multilabel_confusion_matrix(y_test, y_pred)
+
+    # Plot confusion matrix for each class
+    num_classes = ml_cm.shape[0]
+
     for i, cm in enumerate(ml_cm):
         fig, ax = plt.subplots(figsize=(5, 5))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
@@ -127,7 +134,15 @@ def training(X_train, X_test, y_train, y_test):
         ax.set_ylabel('True')
         plt.tight_layout()
 
+        # Save the figure as an image file (e.g., PNG or JPEG)
         plt.savefig(f'confusion_matrix_class_{i + 1}.png')
         plt.close(fig)
 
-training(X_train, X_test, y_train, y_test)
+    return y_pred_f
+
+y_pred = training(X_train, X_test, y_train, y_test, X_test_f).astype(np.uint8)
+
+cols = ['Washing Machine', 'Dishwasher', 'Tumble Dryer', 'Microwave', 'Kettle']
+df = pd.DataFrame(y_pred, columns=cols)
+df.index.name = 'Index'
+df.to_csv('res.csv', index=True)
