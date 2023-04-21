@@ -124,8 +124,6 @@ def training(X_train, X_test, y_train, y_test, X_test_f):
     ml_cm = multilabel_confusion_matrix(y_test, y_pred)
 
     # Plot confusion matrix for each class
-    num_classes = ml_cm.shape[0]
-
     for i, cm in enumerate(ml_cm):
         fig, ax = plt.subplots(figsize=(5, 5))
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
