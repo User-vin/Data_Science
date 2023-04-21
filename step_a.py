@@ -12,7 +12,7 @@ import seaborn as sns
 drive.mount('/content/gdrive', force_remount=True)
 
 
-#Function that takes a 2d array in input and returns a smaller array of shape (nb_row, 7)
+#Function that takes a 2d array as input and returns a smaller array of shape (nb_row, 7)
 #The seven columns are summary statistics, the result is used to train the model
 def add_features(X):
 
