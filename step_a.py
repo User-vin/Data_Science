@@ -12,7 +12,7 @@ import seaborn as sns
 drive.mount('/content/gdrive', force_remount=True)
 
 
-
+#Function that takes a 2d array in input and returns a smaller array of shape (nb_row, 7)
 def add_features(X):
 
   h, w = X.shape
