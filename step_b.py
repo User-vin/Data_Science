@@ -151,7 +151,6 @@ plt.close()
 
 #Confusion matrix
 ml_cm = multilabel_confusion_matrix(y_test_reshaped, y_pred_reshaped)
-num_classes = ml_cm.shape[0]
 for i, cm in enumerate(ml_cm):
     fig, ax = plt.subplots(figsize=(5, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
