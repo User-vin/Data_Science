@@ -95,7 +95,6 @@ def training(X_train, X_test, y_train, y_test, X_test_f):
     classes = ['Dishwasher', 'Kettle', 'Microwave', 'Tumble Dry.', 'Washing mach.']
 
     # Plot and save F1-scores
-    indices = np.arange(len(f1_scores))
     plt.bar(classes, f1_scores)
     plt.xlabel('Class')
     plt.ylabel('F1-score')
@@ -104,7 +103,6 @@ def training(X_train, X_test, y_train, y_test, X_test_f):
     plt.close()
 
     # Plot and save recalls
-    indices = np.arange(len(recalls))
     plt.bar(classes, recalls)
     plt.xlabel('Class')
     plt.ylabel('Recall')
@@ -113,7 +111,6 @@ def training(X_train, X_test, y_train, y_test, X_test_f):
     plt.close()
 
     # Plot and save precisions
-    indices = np.arange(len(precisions))
     plt.bar(classes, precisions)
     plt.xlabel('Class')
     plt.ylabel('Precision')
